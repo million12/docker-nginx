@@ -18,7 +18,7 @@ Default vhost is configured and served from `/data/www/default`.
 
 ##### - error logging
 
-Nginx `error_log` is set to `stderr` and it's available via `docker logs` only, together with supervisord logs.
+Nginx `error_log` is set to `stderr` and therefore Nginx log is available only via `docker logs [contaienr]`, together with supervisor logs.
 
 This is probably best approach if you'd like to source your logs from outside the container (e.g. via `docker logs` or CoreOS `journald') and you don't want to worry about logging and log management inside your container.
 
@@ -30,7 +30,7 @@ This is probably best approach if you'd like to source your logs from outside th
 With data container:  
 ```
 docker run -d -v /data --name=web-data busybox
-docker run -d --volumes-from=web-data -p=80:80 -p=443:443 million12/nginx
+docker run -d --volumes-from=web-data -p=80:80 --name=web million12/nginx
 ```
 
 After that you can see the default vhost content (something like: '*default vhost created on [timestamp]*') when you open http://CONTAINER_IP:PORT/ in the browser.
