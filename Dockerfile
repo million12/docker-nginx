@@ -1,11 +1,10 @@
 FROM million12/centos-supervisor:latest
 MAINTAINER Marcin Ryzycki marcin@m12.io, Przemyslaw Ozgo linux@ozgo.info
 
-ADD nginx.repo /etc/yum.repos.d/nginx.repo
-
 # - Install Nginx
 # - Rename nginx:nginx user/group to www:www
 RUN \
+  rpm -Uvh http://nginx.org/packages/centos/7/noarch/RPMS/nginx-release-centos-7-0.el7.ngx.noarch.rpm && \
   yum install -y nginx && \
   yum clean all && \
 
@@ -14,13 +13,6 @@ RUN \
 
   rm -rf /etc/nginx/*.d /etc/nginx/*_params
 
-# Add whole /etc/nginx/ configuration
-ADD nginx/ /etc/nginx/
+ADD container-files /
 
-# Add config/init scripts to run after container has been started
-ADD config/ /config/
-
-ADD supervisord.conf /etc/supervisord.d/nginx.conf
-
-EXPOSE 80
-EXPOSE 443
+EXPOSE 80 443
