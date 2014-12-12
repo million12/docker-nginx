@@ -1,0 +1,22 @@
+machine:
+  services:
+    - docker
+
+dependencies:
+  pre:
+    - docker info && docker version
+    
+  override:
+    - docker pull million12/centos-supervisor:latest
+
+# Run tests
+test:
+  pre:
+    # Build million12/nginx image
+    - docker build -t million12/nginx .
+
+  override:
+    - docker run -d million12/nginx
+    - docker run -ti million12/nginx "sleep 3; ps aux | grep www"
+    # /var/lib/nginx/tmp should be owned by 'www' user
+    - docker run -ti million12/nginx "ls -al /var/lib/nginx | grep tmp | grep www"
