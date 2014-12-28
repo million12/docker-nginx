@@ -16,7 +16,18 @@ test:
     - docker build -t million12/nginx .
 
   override:
-    - docker run -d million12/nginx
-    - docker run -ti million12/nginx "sleep 3; ps aux | grep www"
-    # /var/lib/nginx/tmp should be owned by 'www' user
+    - docker run -d -p 8080:80 million12/nginx && sleep 5
+    - curl -s --show-error -o out.log localhost:8080 > out.log 2>&1
+    - grep 'default vhost' out.log
+    
+    # The `/var/lib/nginx/tmp` directory should be owned by 'www' user
     - docker run -ti million12/nginx "ls -al /var/lib/nginx | grep tmp | grep www"
+    
+    #
+    # Test internal proxy
+    #
+    - docker run -d -p 8181:80 -p 3000:3000 --env="SET_INTERNAL_PROXY_ON_PORT=3000" million12/nginx && sleep 5
+    - curl -s --show-error -o out.log localhost:8181 > out.log 2>&1
+    - curl -s --show-error -o out-proxy.log localhost:3000 > out-proxy.log 2>&1
+    - grep 'default vhost' out.log
+    - grep 'default vhost' out-proxy.log

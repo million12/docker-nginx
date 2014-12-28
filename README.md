@@ -59,6 +59,13 @@ include     /etc/nginx/conf.d/default-*.conf;
 include     /data/conf/nginx/conf.d/default-*.conf;
 ```
 
+## ENV variables
+
+**SET_INTERNAL_PROXY_ON_PORT**  
+Default: `SET_INTERNAL_PROXY_ON_PORT=null`  
+Configure additional proxy listening on `SET_INTERNAL_PROXY_ON_PORT` port.  
+This might be useful during development, when container's ports are exposed outside under different ones. Because of different reasons you might want to access the project **inside** the container under the same port number as the one exposed outside. This is particularly handy for running inside the container e.g. integration tests or working with [BrowserSync](http://www.browsersync.io/) using `--proxy` option.
+
 
 ## Authors
 
