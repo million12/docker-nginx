@@ -23,6 +23,10 @@ Nginx `error_log` is set to `stderr` and therefore Nginx log is available only v
 
 This is probably best approach if you'd like to source your logs from outside the container (e.g. via `docker logs` or CoreOS `journald') and you don't want to worry about logging and log management inside your container.
 
+#### - graceful reload after config change
+
+Folders `/etc/nginx/` and `/data/conf/nginx/` are monitored for any config changes and, when they happen, Nginx is gracefully reloaded.
+
 
 ## Usage
 

@@ -16,18 +16,42 @@ test:
     - docker build -t million12/nginx .
 
   override:
-    - docker run -d -p 8080:80 million12/nginx && sleep 5
+    - docker run -d -p 8080:80 --name nginx million12/nginx
+    - while true; do if docker logs nginx | grep "nginx entered RUNNING state"; then break; else sleep 1; fi done
     - curl -s --show-error -o out.log localhost:8080 > out.log 2>&1
     - grep 'default vhost' out.log
+    - docker rm -f nginx || true
     
     # The `/var/lib/nginx/tmp` directory should be owned by 'www' user
     - docker run -ti million12/nginx "ls -al /var/lib/nginx | grep tmp | grep www"
     
     #
+    # Test config reload
+    #
+    - docker run -d --name nginx-reload -p 8181:80 million12/nginx
+    - docker logs -f nginx-reload > ${CIRCLE_ARTIFACTS}/docker-nginx-reload.log 2>&1:
+        background: true
+    - while true; do if grep "nginx entered RUNNING state" -a ${CIRCLE_ARTIFACTS}/docker-nginx-reload.log; then break; else sleep 1; fi done
+    - grep 'nginx entered RUNNING state' ${CIRCLE_ARTIFACTS}/docker-nginx-reload.log
+    - grep 'nginx-reload entered RUNNING state' ${CIRCLE_ARTIFACTS}/docker-nginx-reload.log
+    - curl -s --head http://localhost:8181 | grep "HTTP/1.1 200 OK"
+    # make a change and test for reload...
+    - docker run -ti --volumes-from nginx-reload million12/nginx "echo '' >> /data/conf/nginx/hosts.d/some-host.conf" && sleep 1
+    - grep 'nginx.conf syntax is ok' ${CIRCLE_ARTIFACTS}/docker-nginx-reload.log
+    - grep 'signal 1 (SIGHUP) received, reconfiguring' ${CIRCLE_ARTIFACTS}/docker-nginx-reload.log
+    - grep 'gracefully shutting down' ${CIRCLE_ARTIFACTS}/docker-nginx-reload.log
+    - curl -s --head http://localhost:8181 | grep "HTTP/1.1 200 OK"
+    # make invalid change and test: nginx should not be restarted and should still be accessible
+    - docker run -ti --volumes-from nginx-reload million12/nginx "echo 'blabla;' >> /data/conf/nginx/hosts.d/some-host.conf" && sleep 1
+    - grep 'nginx.conf test failed' ${CIRCLE_ARTIFACTS}/docker-nginx-reload.log
+    - curl -s --head http://localhost:8181 | grep "HTTP/1.1 200 OK"
+    - docker rm -f nginx-reload || true
+    
+    #
     # Test internal proxy
     #
-    - docker run -d -p 8181:80 -p 3000:3000 --env="SET_INTERNAL_PROXY_ON_PORT=3000" million12/nginx && sleep 5
-    - curl -s --show-error -o out.log localhost:8181 > out.log 2>&1
-    - curl -s --show-error -o out-proxy.log localhost:3000 > out-proxy.log 2>&1
+    - docker run -d -p 8282:80 -p 3000:3000 --env="SET_INTERNAL_PROXY_ON_PORT=3000" million12/nginx && sleep 5
+    - curl -s --show-error -o out.log http://localhost:8282 > out.log 2>&1
+    - curl -s --show-error -o out-proxy.log http://localhost:3000 > out-proxy.log 2>&1
     - grep 'default vhost' out.log
     - grep 'default vhost' out-proxy.log
