@@ -22,9 +22,6 @@ test:
     - grep 'default vhost' out.log
     - docker rm -f nginx || true
     
-    # The `/var/lib/nginx/tmp` directory should be owned by 'www' user
-    - docker run -ti million12/nginx "ls -al /var/lib/nginx | grep tmp | grep www"
-    
     #
     # Test config reload
     #
