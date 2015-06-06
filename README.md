@@ -3,7 +3,7 @@
 
 This is a [million12/nginx](https://registry.hub.docker.com/u/million12/nginx/) docker container with Nginx web server, nicely tuned for a better performance.
 
-Things included:
+# Features
 
 ##### - directory structure
 ```
@@ -23,9 +23,19 @@ Nginx `error_log` is set to `stderr` and therefore Nginx log is available only v
 
 This is probably best approach if you'd like to source your logs from outside the container (e.g. via `docker logs` or CoreOS `journald') and you don't want to worry about logging and log management inside your container.
 
-#### - graceful reload after config change
+##### - graceful reload after config change
 
 Folders `/etc/nginx/` and `/data/conf/nginx/` are monitored for any config changes and, when they happen, Nginx is gracefully reloaded.
+
+##### - Nginx status page
+
+Nginx status page is configured under `/nginx_status` URL on the default vhost. Also see `STATUS_PAGE_ALLOWED_IP` env variable described below.
+Eample output:  
+	
+	Active connections: 1 
+	server accepts handled requests
+	11475 11475 13566 
+	Reading: 0 Writing: 1 Waiting: 0
 
 
 ## Usage
@@ -76,10 +86,16 @@ Default: `SET_INTERNAL_HTTPS_PROXY_ON_PORT=null`
 Example: `SET_INTERNAL_HTTPS_PROXY_ON_PORT=3000`  
 Similar to `SET_INTERNAL_PROXY_ON_PORT`, but the proxy then listens with SSL support and proxies the request to HTTPS as well. Note: if you use both, `SET_INTERNAL_PROXY_ON_PORT` and `SET_INTERNAL_HTTPS_PROXY_ON_PORT` options (to have HTTP and HTTPS support), you of course need to use two different port numbers.
 
+**STATUS_PAGE_ALLOWED_IP**  
+Default: `STATUS_PAGE_ALLOWED_IP=127.0.0.1`  
+Example: `STATUS_PAGE_ALLOWED_IP=10.1.1.0/16`  
+Configure ip address that would be allowed to see nginx status page on `/nginx_status` URL.  
+
+
 ## Authors
 
-Author: ryzy (<marcin@m12.io>)  
-Author: pozgo (<linux@ozgo.info>)
+Author: Marcin Ryzycki (<marcin@m12.io>)  
+Author: Przemyslaw Ozgo (<linux@ozgo.info>)
 
 ---
 

@@ -16,4 +16,6 @@ RUN \
 
 ADD container-files /
 
+ENV STATUS_PAGE_ALLOWED_IP=127.0.0.1
+
 EXPOSE 80 443
