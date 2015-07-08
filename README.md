@@ -17,6 +17,14 @@ The container will re-create above structure if it's missing - in case you'd use
 
 Default vhost is configured and served from `/data/www/default`.
 
+##### - dummy SSL certificates
+
+The default vhost is configured to work on HTTPS as well.
+
+##### - internal HTTP/HTTPS proxy (if requested)
+
+Set `SET_INTERNAL_PROXY_ON_PORT` and/or `SET_INTERNAL_HTTPS_PROXY_ON_PORT` to have internal transparent proxy on specified port. Useful when working with [BrowserSync](http://www.browsersync.io/) using `--proxy` option.
+
 ##### - error logging
 
 Nginx `error_log` is set to `stderr` and therefore Nginx log is available only via `docker logs [contaienr]`, together with supervisor logs.

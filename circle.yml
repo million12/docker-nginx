@@ -9,12 +9,14 @@ dependencies:
 # Run tests
 test:
   override:
-    - docker run -d -p 8080:80 --name nginx million12/nginx
+    - docker run -d -p 8080:80 -p 8043:443 --name nginx million12/nginx
     - while true; do if docker logs nginx | grep "nginx entered RUNNING state"; then break; else sleep 1; fi done
-    - curl -s --show-error -o out.log localhost:8080 > out.log 2>&1
-    - grep 'default vhost' out.log
+    - curl -sSLi http://localhost:8080 | grep '200 OK'
+    - curl -sSLi http://localhost:8080 | grep 'default vhost'
+    - curl -sSLi --insecure https://localhost:8043 | grep '200 OK'
+    - curl -sSLi --insecure https://localhost:8043 | grep 'default vhost'
     - docker rm -f nginx || true
-    
+
     #
     # Test config reload
     #
@@ -36,15 +38,18 @@ test:
     - grep 'nginx.conf test failed' ${CIRCLE_ARTIFACTS}/docker-nginx-reload.log
     - curl -s --head http://localhost:8181 | grep "HTTP/1.1 200 OK"
     - docker rm -f nginx-reload || true
-    
+
     #
     # Test internal proxy
     #
     - docker run -d --name nginx-proxy -p 8282:80 -p 3000:3000 --env="SET_INTERNAL_PROXY_ON_PORT=3000" million12/nginx && sleep 5
-    - curl -s --show-error -o out.log http://localhost:8282 > out.log 2>&1
-    - curl -s --show-error -o out-proxy.log http://localhost:3000 > out-proxy.log 2>&1
-    - grep 'default vhost' out.log
-    - grep 'default vhost' out-proxy.log
+    - curl -sSLi http://localhost:8282 | grep 'default vhost'
+    - curl -sSLi http://localhost:3000 | grep 'default vhost'
+    - docker rm -f nginx-proxy || true
+    # Same as above, but SSL version
+    - docker run -d --name nginx-proxy -p 8282:443 -p 3000:3000 --env="SET_INTERNAL_HTTPS_PROXY_ON_PORT=3000" million12/nginx && sleep 5
+    - curl -sSLi --insecure https://localhost:8282 | grep 'default vhost'
+    - curl -sSLi --insecure https://localhost:3000 | grep 'default vhost'
     - docker rm -f nginx-proxy || true
 
     #
@@ -53,7 +58,7 @@ test:
     - docker run -d --name nginx-status -p 8383:80 million12/nginx && sleep 5
     - curl -sSLi http://localhost:8383/nginx_status/ | grep "HTTP/1.1 403 Forbidden"
     - docker rm -f nginx-status || true
-    
+
     - docker run -d --name nginx-status -p 8383:80 --env="STATUS_PAGE_ALLOWED_IP=$(ip -4 addr show docker0 | grep inet | cut -d/ -f1 | awk '{print $2}')" million12/nginx && sleep 5
     - curl -sSLi http://localhost:8383/nginx_status/
     - curl -sSLi http://localhost:8383/nginx_status/ | grep "HTTP/1.1 200 OK"
