@@ -6,10 +6,18 @@ dependencies:
   override:
     - docker build -t million12/nginx .
 
+    # Do basic test in `dependencies` section - it doesn't make to continue if it fails here
+    - docker run -d --name nginx million12/nginx
+    - docker logs -f nginx > ${CIRCLE_ARTIFACTS}/docker-nginx.log:
+        background: true
+    - sleep 3
+    - docker logs nginx | grep "nginx entered RUNNING state"
+    - docker rm -f nginx || true
+
 # Run tests
 test:
   override:
-    - docker run -d -p 8080:80 -p 8043:443 --name nginx million12/nginx
+    - docker run -d -p 8080:80 -p 8043:443 --name nginx -e "NGINX_GENERATE_DEFAULT_VHOST=true" million12/nginx
     - while true; do if docker logs nginx | grep "nginx entered RUNNING state"; then break; else sleep 1; fi done
     - curl -sSLi http://localhost:8080 | grep '200 OK'
     - curl -sSLi http://localhost:8080 | grep 'default vhost'
@@ -20,7 +28,7 @@ test:
     #
     # Test config reload
     #
-    - docker run -d --name nginx-reload -p 8181:80 million12/nginx
+    - docker run -d --name nginx-reload -p 8181:80 --env="NGINX_GENERATE_DEFAULT_VHOST=true" million12/nginx
     - docker logs -f nginx-reload > ${CIRCLE_ARTIFACTS}/docker-nginx-reload.log 2>&1:
         background: true
     - while true; do if grep "nginx entered RUNNING state" -a ${CIRCLE_ARTIFACTS}/docker-nginx-reload.log; then break; else sleep 1; fi done
@@ -42,12 +50,12 @@ test:
     #
     # Test internal proxy
     #
-    - docker run -d --name nginx-proxy -p 8282:80 -p 3000:3000 --env="SET_INTERNAL_PROXY_ON_PORT=3000" million12/nginx && sleep 5
+    - docker run -d --name nginx-proxy -p 8282:80 -p 3000:3000 --env="NGINX_GENERATE_DEFAULT_VHOST=true" --env="SET_INTERNAL_PROXY_ON_PORT=3000" million12/nginx && sleep 5
     - curl -sSLi http://localhost:8282 | grep 'default vhost'
     - curl -sSLi http://localhost:3000 | grep 'default vhost'
     - docker rm -f nginx-proxy || true
     # Same as above, but SSL version
-    - docker run -d --name nginx-proxy -p 8282:443 -p 3000:3000 --env="SET_INTERNAL_HTTPS_PROXY_ON_PORT=3000" million12/nginx && sleep 5
+    - docker run -d --name nginx-proxy -p 8282:443 -p 3000:3000 --env="NGINX_GENERATE_DEFAULT_VHOST=true" --env="SET_INTERNAL_HTTPS_PROXY_ON_PORT=3000" million12/nginx && sleep 5
     - curl -sSLi --insecure https://localhost:8282 | grep 'default vhost'
     - curl -sSLi --insecure https://localhost:3000 | grep 'default vhost'
     - docker rm -f nginx-proxy || true
@@ -55,11 +63,11 @@ test:
     #
     # Test /nginx_status page
     #
-    - docker run -d --name nginx-status -p 8383:80 million12/nginx && sleep 5
+    - docker run -d --name nginx-status -p 8383:80 --env="NGINX_GENERATE_DEFAULT_VHOST=true" million12/nginx && sleep 5
     - curl -sSLi http://localhost:8383/nginx_status/ | grep "HTTP/1.1 403 Forbidden"
     - docker rm -f nginx-status || true
 
-    - docker run -d --name nginx-status -p 8383:80 --env="STATUS_PAGE_ALLOWED_IP=$(ip -4 addr show docker0 | grep inet | cut -d/ -f1 | awk '{print $2}')" million12/nginx && sleep 5
+    - docker run -d --name nginx-status -p 8383:80 --env="NGINX_GENERATE_DEFAULT_VHOST=true" --env="STATUS_PAGE_ALLOWED_IP=$(ip -4 addr show docker0 | grep inet | cut -d/ -f1 | awk '{print $2}')" million12/nginx && sleep 5
     - curl -sSLi http://localhost:8383/nginx_status/
     - curl -sSLi http://localhost:8383/nginx_status/ | grep "HTTP/1.1 200 OK"
     - curl -sSLi http://localhost:8383/nginx_status/ | grep "Active connections"

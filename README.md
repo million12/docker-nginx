@@ -8,18 +8,17 @@ This is a [million12/nginx](https://registry.hub.docker.com/u/million12/nginx/) 
 ##### - directory structure
 ```
 /data/www # meant to contain web content
-/data/www/default # default vhost directory
-/data/conf/nginx/ # extra configs to customise Nginx (see below)
+/data/conf/nginx/ # extra Nginx configs to customise its settings (read more below)
 ```
-The container will re-create above structure if it's missing - in case you'd use external /data volume.
+The container will re-create the above structure in case it's missing (i.e. when using empty external /data volume container).
 
 ##### - default vhost
 
-Default vhost is configured and served from `/data/www/default`.
+Default *catch-all* vhost might be generated for you if you set `NGINX_GENERATE_DEFAULT_VHOST=true`. It will serve the content from `/data/www/default` location.
 
 ##### - dummy SSL certificates
 
-The default vhost is configured to work on HTTPS as well.
+The default *catch-all* vhost is configured to work on HTTPS as well.
 
 ##### - internal HTTP/HTTPS proxy (if requested)
 
@@ -48,15 +47,18 @@ Eample output:
 
 ## Usage
 
-`docker run -d -p=80:80 -p=443:443 million12/nginx`
+```
+docker run -d --name=web -p=80:80 -p=443:443 -e "NGINX_GENERATE_DEFAULT_VHOST=true" million12/nginx
+```
 
 With data container:  
 ```
-docker run -d -v /data --name=web-data busybox
-docker run -d --volumes-from=web-data -p=80:80 --name=web million12/nginx
+docker run -d --name=web-data -v /data busybox
+docker run -d --name=web --volumes-from=web-data -p=80:80 -e "NGINX_GENERATE_DEFAULT_VHOST=true" million12/nginx
 ```
 
-After that you can see the default vhost content (something like: '*default vhost created on [timestamp]*') when you open http://CONTAINER_IP:PORT/ in the browser.
+After that you can see the default vhost content (something like: '*default vhost # created on [timestamp]*') when you open http://CONTAINER_IP:PORT/ in the browser.
+
 
 ## Customise
 
@@ -81,7 +83,14 @@ include     /etc/nginx/conf.d/default-*.conf;
 include     /data/conf/nginx/conf.d/default-*.conf;
 ```
 
+
 ## ENV variables
+
+**NGINX_GENERATE_DEFAULT_VHOST**  
+Default: `NGINX_GENERATE_DEFAULT_VHOST=false`  
+Example: `NGINX_GENERATE_DEFAULT_VHOST=true`  
+When set to `true`, dummy default (*catch-all*) Nginx vhost config file will be generated in `/etc/nginx/hosts.d/default.conf`.  
+Use it if you need it, for example to test that your Nginx is working correctly AND/OR if you don't create default vhost config for your app but you still want some dummy catch-all vhost.
 
 **SET_INTERNAL_PROXY_ON_PORT**  
 Default: `SET_INTERNAL_PROXY_ON_PORT=null`  
@@ -98,6 +107,11 @@ Similar to `SET_INTERNAL_PROXY_ON_PORT`, but the proxy then listens with SSL sup
 Default: `STATUS_PAGE_ALLOWED_IP=127.0.0.1`  
 Example: `STATUS_PAGE_ALLOWED_IP=10.1.1.0/16`  
 Configure ip address that would be allowed to see nginx status page on `/nginx_status` URL.  
+**NOTE**: if `NGINX_GENERATE_DEFAULT_VHOST=false` (which is the default setting), you'll need to add:
+```
+include     /etc/nginx/conf.d/stub-status.conf;
+```
+to your own/custom vhost file (which you surely create for your application). Add it to the `server {}` context, this will define the `/nginx_status` location.
 
 
 ## Authors
