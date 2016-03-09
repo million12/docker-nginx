@@ -1,8 +1,9 @@
 FROM million12/centos-supervisor:latest
 MAINTAINER Marcin Ryzycki marcin@m12.io, Przemyslaw Ozgo linux@ozgo.info
 
+ADD container-files/etc/yum.repos.d/nginx.repo /etc/yum.repos.d/
+
 RUN \
-  rpm -Uvh http://nginx.org/packages/centos/7/noarch/RPMS/nginx-release-centos-7-0.el7.ngx.noarch.rpm && \
   yum install -y nginx && \
   yum clean all && \
 
