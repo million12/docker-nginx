@@ -23,6 +23,9 @@ test:
     - curl -sSLi http://localhost:8080 | grep 'default vhost'
     - curl -sSLi --insecure https://localhost:8043 | grep '200 OK'
     - curl -sSLi --insecure https://localhost:8043 | grep 'default vhost'
+    # Test HTTP/2 support
+    - openssl s_client -connect localhost:8043 -nextprotoneg '' || true
+    - openssl s_client -connect localhost:8043 -nextprotoneg '' | grep 'Protocols advertised' | grep 'h2,'
     - docker rm -f nginx || true
 
     #
