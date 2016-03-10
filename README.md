@@ -5,6 +5,8 @@ This is a [million12/nginx](https://registry.hub.docker.com/u/million12/nginx/) 
 
 # Features
 
+##### - HTTP/2 support
+
 ##### - directory structure
 ```
 /data/www # meant to contain web content
