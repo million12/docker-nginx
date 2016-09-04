@@ -16,7 +16,7 @@ The container will re-create the above structure in case it's missing (i.e. when
 
 ##### - default vhost
 
-Default *catch-all* vhost might be generated for you if you set `NGINX_GENERATE_DEFAULT_VHOST=true`. It will serve the content from `/data/www/default` location.
+Default *catch-all* vhost is generated **IF** you set `NGINX_GENERATE_DEFAULT_VHOST=true`. It will serve the content from `/data/www/default` location.
 
 ##### - dummy SSL certificates
 
@@ -64,7 +64,7 @@ After that you can see the default vhost content (something like: '*default vhos
 
 ## Customise
 
-Modify Nginx global configuration (http {} context) by adding configs in following locations:  
+Modify Nginx global configuration (http {} context) by adding configs in the following locations:  
 ```
 /etc/nginx/nginx.d/*.conf
 /data/conf/nginx/nginx.d/*.conf
