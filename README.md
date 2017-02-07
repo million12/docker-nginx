@@ -1,11 +1,21 @@
 # Nginx docker container
 [![Circle CI](https://circleci.com/gh/million12/docker-nginx.svg?style=svg)](https://circleci.com/gh/million12/docker-nginx)
 
+[![CircleCI Build Status](https://img.shields.io/circleci/project/million12/docker-nginx/master.svg)](https://circleci.com/gh/million12/docker-nginx)
+[![GitHub Open Issues](https://img.shields.io/github/issues/million12/docker-nginx.svg)](https://github.com/million12/docker-nginx/issues)
+[![GitHub Stars](https://img.shields.io/github/stars/million12/docker-nginx.svg)](https://github.com/million12/docker-nginx)
+[![GitHub Forks](https://img.shields.io/github/forks/million12/docker-nginx.svg)](https://github.com/million12/docker-nginx)
+[![Stars on Docker Hub](https://img.shields.io/docker/stars/million12/nginx.svg)](https://hub.docker.com/r/million12/nginx)
+[![Pulls on Docker Hub](https://img.shields.io/docker/pulls/million12/nginx.svg)](https://hub.docker.com/r/million12/nginx)
+[![](https://images.microbadger.com/badges/image/million12/nginx.svg)](http://microbadger.com/images/million12/nginx)
+
 This is a [million12/nginx](https://registry.hub.docker.com/u/million12/nginx/) docker container with Nginx web server, nicely tuned for a better performance.
 
 # Features
 
 ##### - HTTP/2 support
+
+##### - LDAP support
 
 ##### - directory structure
 ```
@@ -40,10 +50,10 @@ Folders `/etc/nginx/` and `/data/conf/nginx/` are monitored for any config chang
 
 Nginx status page is configured under `/nginx_status` URL on the default vhost. Also see `STATUS_PAGE_ALLOWED_IP` env variable described below.
 Eample output:  
-	
-	Active connections: 1 
+
+	Active connections: 1
 	server accepts handled requests
-	11475 11475 13566 
+	11475 11475 13566
 	Reading: 0 Writing: 1 Waiting: 0
 
 
