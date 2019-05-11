@@ -1,0 +1,82 @@
+services:
+- docker
+jobs:
+  include:
+  - stage: build&test
+    script:
+    - docker build -t million12/nginx:stage .
+    - docker run -d -p 8080:80 -p 8043:443 --name nginx -e "NGINX_GENERATE_DEFAULT_VHOST=true"
+      million12/nginx:stage
+    - while true; do if docker logs nginx | grep "nginx entered RUNNING state"; then
+      break; else sleep 1; fi done
+    - curl -sSLi http://localhost:8080 | grep '200 OK'
+    - curl -sSLi http://localhost:8080 | grep 'default vhost'
+    - curl -sSLi --insecure https://localhost:8043 | grep '200 OK'
+    - curl -sSLi --insecure https://localhost:8043 | grep 'default vhost'
+    - echo "Test HTTP/2 support"
+    - openssl s_client -connect localhost:8043 -nextprotoneg '' || true
+    - openssl s_client -connect localhost:8043 -nextprotoneg '' | grep 'Protocols
+      advertised' | grep 'h2,'
+    - docker rm -f nginx || true
+    - echo "Testing config reload"
+    - docker run -d --name nginx-reload -p 8181:80 --env="NGINX_GENERATE_DEFAULT_VHOST=true"
+      million12/nginx:stage
+    - while true; do if docker logs nginx-reload | grep "nginx entered RUNNING state";
+      then break; else sleep 1; fi done
+    - docker logs nginx-reload | grep 'nginx-reload entered RUNNING state'
+    - curl -s --head http://localhost:8181 | grep "HTTP/1.1 200 OK"
+    - echo "make a change and test for reload..."
+    - docker run -ti --volumes-from nginx-reload million12/nginx:stage "echo '' >>
+      /data/conf/nginx/hosts.d/some-host.conf" && sleep 1
+    - docker logs nginx-reload | grep 'nginx.conf syntax is ok'
+    - docker logs nginx-reload | grep 'gracefully shutting down'
+    - curl -s --head http://localhost:8181 | grep "HTTP/1.1 200 OK"
+    - echo "make invalid change and test- nginx should not be restarted and should
+      still be accessible"
+    - docker run -ti --volumes-from nginx-reload million12/nginx:stage "echo 'blabla;'
+      >> /data/conf/nginx/hosts.d/some-host.conf" && sleep 1
+    - docker logs nginx-reload | grep 'nginx.conf test failed'
+    - curl -s --head http://localhost:8181 | grep "HTTP/1.1 200 OK"
+    - docker rm -f nginx-reload || true
+    - echo "Test internal proxy"
+    - docker run -d --name nginx-proxy -p 8282:80 -p 3000:3000 --env="NGINX_GENERATE_DEFAULT_VHOST=true"
+      --env="SET_INTERNAL_PROXY_ON_PORT=3000" million12/nginx:stage && sleep 5
+    - curl -sSLi http://localhost:8282 | grep 'default vhost'
+    - curl -sSLi http://localhost:3000 | grep 'default vhost'
+    - docker rm -f nginx-proxy || true
+    - echo "Test internal proxy with SSL"
+    - docker run -d --name nginx-proxy -p 8282:443 -p 3000:3000 --env="NGINX_GENERATE_DEFAULT_VHOST=true"
+      --env="SET_INTERNAL_HTTPS_PROXY_ON_PORT=3000" million12/nginx:stage && sleep
+      5
+    - curl -sSLi --insecure https://localhost:8282 | grep 'default vhost'
+    - curl -sSLi --insecure https://localhost:3000 | grep 'default vhost'
+    - docker rm -f nginx-proxy || true
+    - echo "Test /nginx_status page"
+    - docker run -d --name nginx-status -p 8383:80 --env="NGINX_GENERATE_DEFAULT_VHOST=true"
+      million12/nginx:stage && sleep 5
+    - curl -sSLi http://localhost:8383/nginx_status/ | grep "HTTP/1.1 403 Forbidden"
+    - docker rm -f nginx-status || true
+    - docker run -d --name nginx-status -p 8383:80 --env="NGINX_GENERATE_DEFAULT_VHOST=true"
+      --env="STATUS_PAGE_ALLOWED_IP=$(ip -4 addr show docker0 | grep inet | cut -d/
+      -f1 | awk '{print $2}')" million12/nginx:stage && sleep 5
+    - curl -sSLi http://localhost:8383/nginx_status/
+    - curl -sSLi http://localhost:8383/nginx_status/ | grep "HTTP/1.1 200 OK"
+    - curl -sSLi http://localhost:8383/nginx_status/ | grep "Active connections"
+    - docker rm -f nginx-status || true
+    - echo "Upload staged image"
+    - docker login -u $DOCKER_USER -p $DOCKER_PASS
+    - docker push million12/nginx:stage
+  - stage: deploy
+    if: branch = master
+    script:
+    - docker login -u $DOCKER_USER -p $DOCKER_PASS
+    - docker pull million12/nginx:stage
+    - docker tag million12/nginx:stage million12/nginx:latest
+    - RELEASE=$(grep "NGINX_VERSION=" Dockerfile | sed 's|^.*=||g' |awk '{print $1}');
+      docker tag million12/nginx:latest million12/nginx:${RELEASE}
+    - docker push million12/nginx:latest
+    - RELEASE=$(grep "NGINX_VERSION=" Dockerfile | sed 's|^.*=||g' |awk '{print
+      $1}'); docker push million12/nginx:${RELEASE}
+notifications:
+  slack:
+    secure: FLgk23nziGwIm2zuKYzQLrqLFxn4YranYgdwU58rF7lGFgeZkMbyMiSiaoYAY+fuwWBuoL/9D3HM9DtsDKBVsa6d8R9AgehN6O3q6l3EzDgy9E57wnB0vSWL9wSnUPJ6pbWSdSoAyFIhJNjIJahbJCuFU49L5FGUREILYd5FgPo=

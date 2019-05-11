@@ -1,5 +1,10 @@
 # Nginx docker container
-[![Circle CI](https://circleci.com/gh/million12/docker-nginx.svg?style=svg)](https://circleci.com/gh/million12/docker-nginx)
+[![Build Status](https://travis-ci.org/million12/docker-nginx.svg?branch=master)](https://travis-ci.org/million12/docker-nginx)
+[![GitHub Open Issues](https://img.shields.io/github/issues/million12/docker-nginx.svg)](https://github.com/million12/docker-nginx/issues)
+[![GitHub Stars](https://img.shields.io/github/stars/million12/docker-nginx.svg)](https://github.com/million12/docker-nginx)
+[![GitHub Forks](https://img.shields.io/github/forks/million12/docker-nginx.svg)](https://github.com/million12/docker-nginx)   
+[![](https://img.shields.io/github/release/million12/docker-nginx.svg)](http://microbadger.com/images/million12/docker-nginx)  
+[![Docker build](http://dockeri.co/image/million12/nginx)](https://hub.docker.com/r/million12/nginx/)
 
 This is a [million12/nginx](https://registry.hub.docker.com/u/million12/nginx/) docker container with Nginx web server, nicely tuned for a better performance.
 
@@ -121,6 +126,3 @@ to your own/custom vhost file (which you surely create for your application). Ad
 Author: Marcin Ryzycki (<marcin@m12.io>)  
 Author: Przemyslaw Ozgo (<linux@ozgo.info>)
 
----
-
-**Sponsored by [Prototype Brewery](http://prototypebrewery.io/)** - the new prototyping tool for building highly-interactive prototypes of your website or web app. Built on top of [Neos CMS](https://www.neos.io/) and [Zurb Foundation](http://foundation.zurb.com/) framework.

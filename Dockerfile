@@ -1,10 +1,14 @@
-FROM million12/centos-supervisor:latest
-MAINTAINER Marcin Ryzycki marcin@m12.io, Przemyslaw Ozgo linux@ozgo.info
+FROM million12/centos-supervisor:4.0.2
+
+ENV \
+  NGINX_GENERATE_DEFAULT_VHOST=false \
+  STATUS_PAGE_ALLOWED_IP=127.0.0.1 \
+  NGINX_VERSION=1.15.12-1
 
 ADD container-files/etc/yum.repos.d/nginx.repo /etc/yum.repos.d/
 
 RUN \
-  yum install -y nginx && \
+  yum install -y nginx-${NGINX_VERSION}.el7.ngx && \
   yum clean all && \
 
   `# Rename nginx:nginx user/group to www:www, also set uid:gid to 80:80 (just to make it nice)` \
@@ -21,9 +25,5 @@ RUN \
   openssl x509 -req -days 3650 -in /etc/nginx/ssl/dummy.csr -signkey /etc/nginx/ssl/dummy.key -out /etc/nginx/ssl/dummy.crt
 
 ADD container-files /
-
-ENV \
-  NGINX_GENERATE_DEFAULT_VHOST=false \
-  STATUS_PAGE_ALLOWED_IP=127.0.0.1
 
 EXPOSE 80 443
