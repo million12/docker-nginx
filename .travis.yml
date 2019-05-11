@@ -29,7 +29,6 @@ jobs:
     - docker run -ti --volumes-from nginx-reload million12/nginx:stage "echo '' >>
       /data/conf/nginx/hosts.d/some-host.conf" && sleep 1
     - docker logs nginx-reload | grep 'nginx.conf syntax is ok'
-    - docker logs nginx-reload | grep 'signal 1 (SIGHUP) received, reconfiguring'
     - docker logs nginx-reload | grep 'gracefully shutting down'
     - curl -s --head http://localhost:8181 | grep "HTTP/1.1 200 OK"
     - echo "make invalid change and test- nginx should not be restarted and should
