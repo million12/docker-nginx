@@ -75,7 +75,7 @@ jobs:
     - RELEASE=$(grep "NGINX_VERSION=" Dockerfile | sed 's|^.*=||g' |awk '{print $1}');
       docker tag million12/nginx:latest million12/nginx:${RELEASE}
     - docker push million12/nginx:latest
-    - RELEASE=$(grep "NGINX_VERSION=" centos/Dockerfile | sed 's|^.*=||g' |awk '{print
+    - RELEASE=$(grep "NGINX_VERSION=" Dockerfile | sed 's|^.*=||g' |awk '{print
       $1}'); docker push million12/nginx:${RELEASE}
 notifications:
   slack:
